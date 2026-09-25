@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fuja da Prova!</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="shell">
+<header><div><small>JOGO ESCOLAR • HTML + CSS + JAVASCRIPT</small><h1>Fuja da Prova!</h1></div>
+<div class="stats"><div>PONTOS<strong id="score">0</strong></div><div>TEMPO<strong id="time">60</strong></div><div>VIDAS<strong id="lives">♥♥♥</strong></div></div></header>
+<section class="area"><canvas id="game" width="880" height="520"></canvas>
+<div id="screen" class="overlay"><div class="card"><div class="logo">📚</div><h2>Fuja da Prova!</h2>
+<p>Complete 6 fases, colete itens e chegue à saída sem ser pego pelos professores.</p>
+<div class="keys">W A S D &nbsp; ou &nbsp; ↑ ↓ ← →</div><button id="start">COMEÇAR JOGO</button>
+<small>Quatro professores usam estratégias diferentes de perseguição.</small></div></div>
+<div id="msg" class="msg hidden"></div></section>
+<footer><span>Fase <b id="level">1</b>/6</span><span id="objective">Encontre a saída!</span></footer>
+</main><script src="script.js"></script>
+</body></html>
