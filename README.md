@@ -2,14 +2,15 @@
 
 Jogo em HTML, CSS e JavaScript puro.
 
-## Versão 2
-- 6 fases diferentes.
+## Versão 3
+- 10 fases diferentes com labirintos maiores.
 - 4 professores com IA e estratégias individuais.
 - Blinky persegue diretamente.
 - Pinky mira 4 blocos à frente.
 - Clyde alterna entre perseguição e fuga para o canto.
 - Inky calcula um alvo vetorial usando jogador + Blinky.
-- A decisão de movimento evita paredes e meia-volta.
+- A decisão de movimento usa busca de caminho e permite sair de becos sem ficar travada.
+- Cada fase tem uma meta de pontos que libera a saída.
 - Pontuação, vidas, cronômetro e itens coletáveis.
 
 ## Abrir no VS Code
