@@ -4,8 +4,14 @@ const levelEl=document.getElementById("level"),objEl=document.getElementById("ob
 const T=36,C=29,R=19,W=cv.width,H=cv.height;
 const D={up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}},OP={up:"down",down:"up",left:"right",right:"left"},ORDER=["up","left","down","right"];
 const MAP_COUNT=10,ITEM_COUNT=16,KEY_COUNT=4;
-const info=[{name:"Blinky",color:"#ef4444",mode:"direct",corner:{r:1,c:C-2}},{name:"Pinky",color:"#ff75b5",mode:"ahead",corner:{r:1,c:1}},{name:"Inky",color:"#40d9e8",mode:"vector",corner:{r:R-2,c:C-2}},{name:"Clyde",color:"#f59e0b",mode:"shy",corner:{r:R-2,c:1}}];
+const info=[{name:"Blinky",color:"#ef4444",mode:"direct",corner:{r:1,c:C-2}},{name:"Pinky",color:"#ff75b5",mode:"ahead",corner:{r:R-2,c:1}},{name:"Inky",color:"#40d9e8",mode:"vector",corner:{r:R-2,c:C-2}},{name:"Clyde",color:"#f59e0b",mode:"shy",corner:{r:1,c:14}}];
+const DIFFICULTIES={
+ easy:{name:"Fácil",ghosts:2,step:.38,stepMin:.30,vision:8,scatter:6,chase:4,inv:2.8,baseTime:100,decay:2,slop:.35,stun:1.4,tip:"Professores lentos e míopes: perseguem só quando chegam perto."},
+ medium:{name:"Médio",ghosts:3,step:.30,stepMin:.22,vision:12,scatter:4,chase:6,inv:2.2,baseTime:80,decay:3,slop:.18,stun:1.0,tip:"Os professores revezam entre perseguir você e patrulhar."},
+ hard:{name:"Difícil",ghosts:4,step:.24,stepMin:.16,vision:99,scatter:3,chase:8,inv:1.6,baseTime:68,decay:3,slop:.05,stun:.6,tip:"Os quatro professores caçam sem descanso. Boa sorte!"}
+};
 let map,player,ghosts,items,keys,exit,level=0,score=0,keysFound=0,lives=3,time=75,running=false,last=0,acc=0,exitHint=0;
+let difficulty="medium",diff=DIFFICULTIES.medium,mode="scatter",modeTimer=0,openCache=[];
 
 function seeded(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shuffled(values,random){let result=values.slice();for(let i=result.length-1;i>0;i--){let j=Math.floor(random()*(i+1));[result[i],result[j]]=[result[j],result[i]]}return result}
@@ -22,7 +28,7 @@ function createMap(seed){
 }
 const maps=Array.from({length:MAP_COUNT},(_,i)=>createMap(104729+i*7919));
 
-function openCells(){let result=[];for(let r=0;r<R;r++)for(let c=0;c<C;c++)if(map[r][c]=="0")result.push({r,c});return result}
+function openCells(){if(openCache.length)return openCache;openCache=[];for(let r=0;r<R;r++)for(let c=0;c<C;c++)if(map[r][c]=="0")openCache.push({r,c});return openCache}
 function can(r,c){return r>=0&&r<R&&c>=0&&c<C&&map[r][c]=="0"}
 function cellKey(cell){return cell.r+","+cell.c}
 function search(start){
@@ -60,16 +66,17 @@ function makeKeys(path,cells,reserved,itemCells){
  return selected.slice(0,KEY_COUNT).map(cell=>({...cell,got:false}))
 }
 function setup(){
- map=maps[level];let cells=openCells(),startCell={r:1,c:1},midRow=Math.floor((R-1)/2),midCol=Math.floor((C-1)/2),starts=[{r:midRow-2,c:midCol-5},{r:midRow-2,c:midCol+5},{r:midRow+2,c:midCol-5},{r:midRow+2,c:midCol+5}];
- exit=findExit(startCell,starts);keysFound=0;exitHint=0;player={...startCell,dir:"right",next:"right",inv:2.2,speed:8,progress:0};
+ diff=DIFFICULTIES[difficulty];map=maps[level];openCache=[];let cells=openCells(),startCell={r:1,c:1},midRow=Math.floor((R-1)/2),midCol=Math.floor((C-1)/2),starts=[{r:midRow-2,c:midCol-5},{r:midRow-2,c:midCol+5},{r:midRow+2,c:midCol-5},{r:midRow+2,c:midCol+5}];
+ exit=findExit(startCell,starts);keysFound=0;exitHint=0;player={...startCell,dir:"right",next:"right",inv:diff.inv,speed:8,progress:0};
  let path=findPath(startCell,exit),reserved=new Set([startCell,exit,...starts].map(cellKey));items=makeItems(path,cells,reserved);keys=makeKeys(path,cells,reserved,items);
- ghosts=info.map((g,i)=>({...g,r:starts[i].r,c:starts[i].c,dir:ORDER[(i+level)%4],cool:.2+i*.12}));
- time=75-level*3;levelEl.textContent=level+1;updateHUD()
+ ghosts=info.slice(0,diff.ghosts).map((g,i)=>({...g,r:starts[i].r,c:starts[i].c,dir:ORDER[(i+level)%4],cool:.35+i*.15}));
+ mode="scatter";modeTimer=diff.scatter;time=Math.max(40,diff.baseTime-level*diff.decay);levelEl.textContent=level+1;updateHUD()
 }
 function dist(a,b){return Math.hypot(a.c-b.c,a.r-b.r)}
-function nearestOpen(r,c){let best=openCells()[0],bestDistance=Infinity;for(let cell of openCells()){let value=(cell.r-r)**2+(cell.c-c)**2;if(value<bestDistance){bestDistance=value;best=cell}}return best}
+function nearestOpen(r,c){let cells=openCells(),best=cells[0],bestDistance=Infinity;for(let cell of cells){let value=(cell.r-r)**2+(cell.c-c)**2;if(value<bestDistance){bestDistance=value;best=cell}}return best}
 function options(g){let available=ORDER.filter(direction=>can(g.r+D[direction].y,g.c+D[direction].x)),forward=available.filter(direction=>direction!=OP[g.dir]);return forward.length?forward:available}
 function target(g){
+ if(mode=="scatter"||dist(g,player)>diff.vision)return nearestOpen(g.corner.r,g.corner.c);
  let point;
  if(g.mode=="direct")point={r:player.r,c:player.c};
  else if(g.mode=="ahead"){let r=player.r,c=player.c,d=D[player.dir];for(let i=0;i<4;i++){r+=d.y;c+=d.x}point={r,c}}
@@ -82,16 +89,19 @@ function pathDistance(from,to){
  for(let i=0;i<queue.length;i++){let current=queue[i],currentIndex=current.r*C+current.c;for(let direction of ORDER){let step=D[direction],r=current.r+step.y,c=current.c+step.x;if(!can(r,c))continue;let index=r*C+c;if(distances[index]!==-1)continue;distances[index]=distances[currentIndex]+1;queue.push({r,c})}}
  return distances[from.r*C+from.c]
 }
-function choose(g,goal){let available=options(g);if(!available.length)return OP[g.dir];let best=available[0],bestDistance=Infinity;for(let direction of available){let step=D[direction],next={r:g.r+step.y,c:g.c+step.x},value=pathDistance(next,goal);if(value<0)value=dist(next,goal);if(value<bestDistance||value==bestDistance&&direction==g.dir){bestDistance=value;best=direction}}return best}
+function ghostStep(){return Math.max(diff.stepMin,diff.step-level*.012)}
+function choose(g,goal){let available=options(g);if(!available.length)return OP[g.dir];if(Math.random()<diff.slop)return available[Math.floor(Math.random()*available.length)];let best=available[0],bestDistance=Infinity;for(let direction of available){let step=D[direction],next={r:g.r+step.y,c:g.c+step.x},value=pathDistance(next,goal);if(value<0)value=dist(next,goal);if(value<bestDistance||value==bestDistance&&direction==g.dir){bestDistance=value;best=direction}}return best}
 function updateGhost(g,dt){
- g.cool-=dt;if(g.cool>0)return;g.cool=Math.max(.16,.25-level*.006);
+ g.cool-=dt;if(g.cool>0)return;g.cool=ghostStep();
  let oldR=g.r,oldC=g.c;g.dir=choose(g,target(g));let step=D[g.dir],r=g.r+step.y,c=g.c+step.x;
  if(can(r,c)){g.r=r;g.c=c}
  if(g.r==oldR&&g.c==oldC){let reverse=OP[g.dir];step=D[reverse];r=g.r+step.y;c=g.c+step.x;if(can(r,c)){g.dir=reverse;g.r=r;g.c=c}}
  if(player.inv<=0&&g.r==player.r&&g.c==player.c)hit()
 }
 function hit(){
- lives--;score=Math.max(0,score-150);player.inv=1.8;player.progress=0;show("Professor pegou você! -1 vida");
+ lives--;score=Math.max(0,score-150);player.inv=diff.inv;player.progress=0;
+ mode="scatter";modeTimer=diff.scatter;ghosts.forEach(g=>g.cool=diff.stun);
+ show("Professor pegou você! -1 vida");
  if(lives<=0){end(false,"Você ficou sem vidas!");return}
  player.r=1;player.c=1;player.dir="right";player.next="right"
 }
@@ -106,6 +116,7 @@ function next(){
 }
 function update(dt){
  if(exitHint>0)exitHint-=dt;acc+=dt;if(acc>=1){let seconds=Math.floor(acc);time-=seconds;acc-=seconds;if(time<=0){time=0;end(false,"O tempo acabou!");return}}
+ modeTimer-=dt;if(modeTimer<=0){if(mode=="scatter"){mode="chase";modeTimer=diff.chase}else{mode="scatter";modeTimer=diff.scatter}}
  if(player.inv>0)player.inv-=dt;movePlayer(dt);ghosts.forEach(g=>updateGhost(g,dt));collect();
  if(player.r==exit.r&&player.c==exit.c&&keysFound==KEY_COUNT)next();updateHUD()
 }
@@ -124,6 +135,10 @@ function movePlayer(dt){
 }
 function loop(now){if(!running)return;let dt=Math.min((now-last)/1000,.05);last=now;update(dt);draw();requestAnimationFrame(loop)}
 function begin(){if(running)return;level=0;score=0;lives=3;setup();running=true;screen.classList.add("hidden");last=performance.now();requestAnimationFrame(loop)}
+const diffButtons=[...document.querySelectorAll("#difficulty .diff-btn")],diffInfo=document.getElementById("diffInfo");
+function selectDifficulty(name){difficulty=name;diff=DIFFICULTIES[name];diffButtons.forEach(b=>b.classList.toggle("active",b.dataset.diff===name));if(diffInfo)diffInfo.textContent=DIFFICULTIES[name].tip;timeEl.textContent=Math.max(40,DIFFICULTIES[name].baseTime)}
+if(diffButtons.length)selectDifficulty(difficulty);
+diffButtons.forEach(b=>b.addEventListener("click",()=>selectDifficulty(b.dataset.diff)));
 start.onclick=begin;
 addEventListener("keydown",e=>{let m={w:"up",arrowup:"up",s:"down",arrowdown:"down",a:"left",arrowleft:"left",d:"right",arrowright:"right"}[e.key.toLowerCase()];if(m&&running){player.next=m;e.preventDefault()}if(e.key=="Enter"&&!running)begin()});
 

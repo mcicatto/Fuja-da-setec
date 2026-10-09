@@ -14,5 +14,13 @@ Jogo em HTML, CSS e JavaScript puro.
 - Os professores começam na região central do labirinto, longe do jogador.
 - Pontuação, vidas, cronômetro e itens coletáveis.
 
+## Dificuldades
+Escolha antes de começar:
+- **Fácil**: 2 professores, lentos e de visão curta. Eles patrulham bastante e só perseguem quando você chega perto.
+- **Médio**: 3 professores, alternando entre perseguição e patrulha.
+- **Difícil**: os 4 professores caçam sem descanso (visão total e mais rápidos).
+
+A IA foi ajustada para ser mais divertida: os professores revezam entre **patrulhar** (ir para o canto) e **perseguir**, só enxergam o jogador dentro de um alcance, às vezes tomam decisões imperfeitas e ficam atordoados por alguns instantes depois de te pegar.
+
 ## Abrir no VS Code
 Abra a pasta inteira no VS Code e use o Live Server. O arquivo `index.html` está na raiz do projeto, portanto é a página inicial.
