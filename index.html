@@ -11,7 +11,21 @@
 <canvas id="mcAvatar" width="32" height="32" aria-hidden="true"></canvas>
 <span class="brand-name">MC</span>
 </div>
-<div class="stats"><div class="stat-score">PONTOS<strong id="score">0</strong></div><div class="stat-time">TEMPO<strong id="time">75</strong></div><div class="stat-lives">VIDAS<strong id="lives">♥♥♥</strong></div></div></header>
+<div class="stats" role="group" aria-label="Indicadores do jogo">
+<div class="stat stat-score">
+<svg class="stat-ico" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><path d="M3 1h4v1H3zM2 2h6v1H2zM1 3h8v1H1zM1 4h8v1H1zM1 5h8v1H1zM2 6h6v1H2zM3 7h4v1H3z" fill="#c9a227"/><path d="M4 3h2v1H4zM4 4h2v1H4zM4 5h2v1H4z" fill="#6e5210"/></svg>
+<span class="stat-label">PONTOS</span><strong id="score">0</strong>
+</div>
+<div class="stat stat-time">
+<svg class="stat-ico" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><path d="M3 1h4v1H3zM2 2h1v1H2zM7 2h1v1H7zM1 3h1v1H1zM8 3h1v1H8zM1 4h1v1H1zM4 4h4v1H4zM8 4h1v1H8zM1 5h1v1H1zM4 5h1v1H4zM5 5h1v1H5zM8 5h1v1H8zM2 6h6v1H2zM3 7h4v1H3z" fill="#3d8f6a"/><path d="M4 3h2v1H4z" fill="#3d8f6a"/></svg>
+<span class="stat-label">TEMPO</span><strong id="time">75</strong>
+</div>
+<div class="stat stat-lives">
+<svg class="stat-ico heart-ico" viewBox="0 0 11 10" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 1h2v1H2zM7 1h2v1H7zM1 2h8v1H1zM0 3h11v1H0zM0 4h11v1H0zM1 5h9v1H1zM2 6h7v1H2zM3 7h5v1H3zM4 8h3v1H4zM5 9h1v1H5z" fill="currentColor"/></svg>
+<span class="stat-label">VIDAS</span><span id="lives" class="hearts"></span>
+</div>
+</div>
+</header>
 <section class="area"><canvas id="game" width="1044" height="684"></canvas>
 <div id="screen" class="overlay">
 <canvas id="menuBg" width="1044" height="684" aria-hidden="true"></canvas>
